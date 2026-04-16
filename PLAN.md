@@ -10,8 +10,8 @@
 ## Current Status
 
 **Last updated:** Apr 16, 2026
-**Phase:** Phase 2 — Feature 1 scaffold complete
-**Next task:** Feature 1 completion — phone test when phone available + then Feature 2 (FuzzyMatcher + audio)
+**Phase:** Phase 2 — Feature 2 scaffold complete
+**Next task:** Feature 2 phone test when phone available + Feature 3 (Coaching Response UI)
 **Blockers:** Moto G54 5G has chipset issues. Alternative Android phone pending. APK install/phone test blocked until phone resolved.
 **Notes:** Gallery minSdk=31 (Android 12) — overrides CLAUDE.md's API 24. Java 21 required for LiteRT-LM builds (added to .zshrc).
 **Days remaining:** 31 (Apr 16 - May 17)
@@ -191,22 +191,26 @@
 
 **Goal:** Child reads aloud → audio processed → spoken words compared to page text → errors identified.
 
-- [ ] Modify Gallery's Audio Scribe activity for reading recording
-  - Large "Read" button (56dp+), 30-second timer with visual countdown, auto-stop at 28s
-- [ ] Pass recorded audio + page text to Gemma 4 E2B in a single prompt
-  - Prompt structure: system prompt + "PAGE TEXT: {ocr_text}\n\nThe child just read this aloud. Listen to their audio and compare."
-- [ ] Add `apache commons-text` to `build.gradle` for LevenshteinDistance
-  - File: `android/app/build.gradle`
-- [ ] Implement `FuzzyMatcher.kt` — word-by-word Levenshtein comparison
+- [x] Modify Gallery's Audio Scribe activity for reading recording
+  - Large "Read It Aloud!" button (72dp), 30-second countdown timer, auto-stop at 28s
+  - READING phase added to LitBudScreen.kt with full RecordingPanel
+- [x] Pass recorded audio + page text to Gemma 4 E2B in a single prompt
+  - Two-step: transcribe audio → fuzzy match → coaching prompt with only struggling/missed words
+- [x] Add `apache commons-text` to `libs.versions.toml` + `build.gradle.kts`
+- [x] Implement `FuzzyMatcher.kt` — word-by-word Levenshtein comparison
   - Normalize: lowercase, strip punctuation, trim whitespace
   - Thresholds: >=85 CORRECT, 60-84 STRUGGLING, <60 MISSED
   - Input: page word list + spoken word list (positional)
-  - Output: list of (word, status, score) triples
-- [ ] Run fuzzy matching BEFORE sending to model — model receives only struggling/missed words
-- [ ] Display page text with bold styling on struggled/missed words (SpannableString + StyleSpan)
-- [ ] Write unit test: `FuzzyMatcherTest.kt` — test all threshold boundaries
-- [ ] Run unit tests: `./gradlew test --tests "*.FuzzyMatcherTest"`
-- [ ] **Done when:** Child reads aloud → audio recorded (≤30s) → fuzzy matching identifies errors → struggled words bolded in displayed text. Works in airplane mode.
+  - Output: list of WordResult (expected, spoken, score, status)
+- [x] Run fuzzy matching BEFORE sending to model — model receives only struggling/missed words
+- [x] Display page text with bold + color styling on struggled/missed words (AnnotatedString)
+  - CORRECT = default color, STRUGGLING = orange bold, MISSED = red bold
+  - COACHING phase shows speech bubble (24dp radius) with model coaching text
+- [x] Write unit test: `FuzzyMatcherTest.kt` — test all threshold boundaries (16 tests)
+- [x] Run unit tests: `./gradlew :app:testDebugUnitTest --tests "*.FuzzyMatcherTest"` — 16/16 PASSED
+- [x] Build: SUCCESS (clean build after purging macOS duplicate artifacts)
+- [ ] Test on phone: read sample pages, check fuzzy matching accuracy ← phone pending
+- [ ] **Done when:** Child reads aloud → audio recorded (≤30s) → fuzzy matching identifies errors → struggled words bolded in displayed text. Works in airplane mode. ← phone test pending
 
 ### Feature 3: Coaching Response (Days 11-12)
 
