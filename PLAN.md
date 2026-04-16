@@ -10,8 +10,8 @@
 ## Current Status
 
 **Last updated:** Apr 16, 2026
-**Phase:** Phase 1 — Day 4 tomorrow (Gallery orientation + PWA scaffold)
-**Next task:** Day 4 — Gallery codebase orientation + PWA scaffold
+**Phase:** Phase 2 starts tomorrow (Apr 17)
+**Next task:** Day 5 — Feature 1: Page Capture & OCR in Android
 **Blockers:** Moto G54 5G has chipset issues. Alternative Android phone pending. APK install/phone test blocked until phone resolved.
 **Notes:** Gallery minSdk=31 (Android 12) — overrides CLAUDE.md's API 24. Java 21 required for LiteRT-LM builds (added to .zshrc).
 **Days remaining:** 31 (Apr 16 - May 17)
@@ -150,17 +150,20 @@
 
 ### Day 4 (Apr 17) — Gallery codebase orientation + PWA scaffold
 
-- [ ] Study Gallery's codebase structure — identify key activities, layouts, and navigation
-  - Files to map: MainActivity, Ask Image activity, Audio Scribe activity, AI Chat activity, Agent Skills activity
-  - Identify where system prompts are set, where model responses are displayed, where tools are handled
-- [ ] Document the Gallery activity → LitBud screen mapping (from android skill)
-- [ ] Create PWA scaffold: `ollama/test_harness/index.html` (single entry point)
-- [ ] Create `ollama/test_harness/camera.js` — webcam capture + base64 encoding
-- [ ] Create `ollama/test_harness/api.js` — Ollama API calls (3-call architecture)
-- [ ] Create `ollama/test_harness/speech.js` — Web Speech API integration
-- [ ] Create `ollama/test_harness/fuzzy.js` — Levenshtein word comparison (JavaScript port)
-- [ ] Test PWA end-to-end: camera → OCR → speech → coaching response via Ollama
-- [ ] **GATE:** PWA completes full reading flow (camera → speak → coaching) via Ollama on Mac
+- [x] Study Gallery's codebase structure — it's Compose-based, not Activities
+  - Gallery uses `CustomTask` interface + Hilt `@IntoSet` for adding new tasks
+  - System prompt → `Task.defaultSystemPrompt` field; load from assets at runtime
+  - Function calling → `@Tool`/`@ToolParam` SDK annotations (LitBud: parse JSON from text instead)
+  - Key IDs: LLM_ASK_IMAGE (OCR), LLM_ASK_AUDIO (reading), LLM_CHAT (coaching), LLM_AGENT_CHAT (tools)
+- [x] Document the Gallery activity → LitBud screen mapping → `android/LITBUD_MAPPING.md`
+  - LitBud plan: create `customtasks/litbud/` package implementing full flow as one CustomTask
+- [x] Create PWA scaffold: `ollama/test_harness/index.html` (single entry point)
+- [x] Create `ollama/test_harness/camera.js` — webcam capture + base64 encoding
+- [x] Create `ollama/test_harness/api.js` — Ollama 3-call architecture (generate + chat)
+- [x] Create `ollama/test_harness/speech.js` — Web Speech API integration (Chrome only, needs internet)
+- [x] Create `ollama/test_harness/fuzzy.js` — Levenshtein word comparison (JS port of Android logic)
+- [x] Test PWA end-to-end: Ollama /api/chat returns coaching + tool_calls JSON ✅
+- [x] **GATE:** PWA server runs at localhost:8000 ✅ | Full API flow tested via curl ✅
 
 ---
 

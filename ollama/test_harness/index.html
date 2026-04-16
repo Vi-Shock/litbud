@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LitBud — Dev Test Harness</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:       #4A90D9;
+      --brand-dark:  #2C6FAC;
+      --accent:      #F5A623;
+      --correct:     #27AE60;
+      --struggling:  #E67E22;
+      --missed:      #E74C3C;
+      --bg:          #F7F9FC;
+      --card:        #FFFFFF;
+      --text:        #2C3E50;
+      --muted:       #7F8C8D;
+      --radius:      16px;
+      --shadow:      0 2px 12px rgba(0,0,0,0.10);
+    }
+
+    body {
+      font-family: 'Nunito', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+    }
+
+    /* Load Nunito from Google Fonts (requires internet — dev tool only) */
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+    /* ── Header ── */
+    header {
+      width: 100%;
+      max-width: 640px;
+      text-align: center;
+      padding: 20px 0 12px;
+    }
+    header h1 { font-size: 2rem; font-weight: 800; color: var(--brand); }
+    header p  { font-size: 0.9rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── Status banner ── */
+    #status-banner {
+      width: 100%;
+      max-width: 640px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: none;
+    }
+    #status-banner.ok    { background: #d4edda; color: #155724; display: block; }
+    #status-banner.warn  { background: #fff3cd; color: #856404; display: block; }
+    #status-banner.error { background: #f8d7da; color: #721c24; display: block; }
+
+    /* ── Cards ── */
+    .card {
+      width: 100%;
+      max-width: 640px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--brand-dark);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .step-num {
+      background: var(--brand);
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    /* ── Camera ── */
+    #camera-container {
+      position: relative;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      aspect-ratio: 4/3;
+    }
+    #camera-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    #captured-preview {
+      width: 100%;
+      border-radius: 12px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.1s;
+      min-height: 52px;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary   { background: var(--brand);   color: white; }
+    .btn-accent    { background: var(--accent);  color: white; }
+    .btn-danger    { background: var(--missed);  color: white; }
+    .btn-success   { background: var(--correct); color: white; }
+    .btn-secondary { background: #ECF0F1; color: var(--text); }
+    .btn-full      { width: 100%; margin-top: 10px; }
+
+    /* ── OCR text display ── */
+    #ocr-text-box {
+      width: 100%;
+      min-height: 80px;
+      border: 2px solid #E0E0E0;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 1rem;
+      font-family: inherit;
+      resize: vertical;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    #ocr-text-box:focus { outline: none; border-color: var(--brand); }
+
+    /* ── Recording timer ── */
+    #record-timer {
+      font-size: 2rem;
+      font-weight: 800;
+      text-align: center;
+      color: var(--missed);
+      display: none;
+      margin: 8px 0;
+    }
+    #spoken-interim {
+      min-height: 48px;
+      font-size: 0.95rem;
+      color: var(--muted);
+      font-style: italic;
+      padding: 8px;
+      background: #F7F9FC;
+      border-radius: 8px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    /* ── Word highlighting ── */
+    #highlighted-text {
+      font-size: 1.1rem;
+      line-height: 2;
+      padding: 12px;
+      background: #F7F9FC;
+      border-radius: 10px;
+      margin-top: 10px;
+      display: none;
+    }
+    .word-correct    { color: var(--correct);    font-weight: 600; }
+    .word-struggling { color: var(--struggling); font-weight: 700; text-decoration: underline wavy var(--struggling); }
+    .word-missed     { color: var(--missed);     font-weight: 700; text-decoration: underline wavy var(--missed); }
+
+    /* ── Coaching bubble ── */
+    #coaching-bubble {
+      background: linear-gradient(135deg, #EBF5FB, #D6EAF8);
+      border-radius: 24px 24px 24px 4px;
+      padding: 20px 24px;
+      font-size: 1.1rem;
+      line-height: 1.7;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 10px;
+      display: none;
+      animation: pop-in 0.3s ease;
+    }
+    @keyframes pop-in {
+      from { opacity: 0; transform: scale(0.95) translateY(8px); }
+      to   { opacity: 1; transform: scale(1)    translateY(0); }
+    }
+
+    /* ── Tool calls panel ── */
+    #tool-calls-panel {
+      margin-top: 10px;
+      display: none;
+    }
+    .tool-call {
+      background: #F0F3F4;
+      border-left: 4px solid var(--brand);
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-family: monospace;
+      margin-top: 6px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #555;
+    }
+    .tool-call-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--brand-dark);
+      margin-top: 8px;
+      margin-bottom: 2px;
+      font-family: inherit;
+    }
+
+    /* ── Loader ── */
+    .spinner {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 3px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Accuracy badge ── */
+    #accuracy-badge {
+      display: none;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-top: 8px;
+      display: inline-block;
+    }
+
+    /* ── Reset / new session ── */
+    #new-session-btn { margin-top: 8px; }
+
+    /* ── Footer ── */
+    footer {
+      width: 100%;
+      max-width: 640px;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding: 16px 0 24px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📖 LitBud</h1>
+  <p>Dev Test Harness — Ollama + PWA (not the real product)</p>
+</header>
+
+<div id="status-banner"></div>
+
+<!-- ── Step 1: Capture Page ── -->
+<div class="card" id="card-capture">
+  <h2><span class="step-num">1</span> Capture Book Page</h2>
+  <div id="camera-container">
+    <video id="camera-video" autoplay playsinline muted></video>
+  </div>
+  <img id="captured-preview" alt="Captured page" />
+  <button class="btn btn-primary btn-full" id="start-camera-btn" onclick="startCamera()">
+    📷 Start Camera
+  </button>
+  <button class="btn btn-accent btn-full" id="capture-btn" onclick="captureAndOCR()" disabled>
+    <span id="capture-spinner" class="spinner" style="display:none"></span>
+    Capture &amp; Read Text
+  </button>
+</div>
+
+<!-- ── Step 2: OCR Result ── -->
+<div class="card" id="card-ocr" style="display:none">
+  <h2><span class="step-num">2</span> Page Text (edit if needed)</h2>
+  <textarea id="ocr-text-box" placeholder="Page text will appear here after capture..."></textarea>
+  <button class="btn btn-primary btn-full" id="record-btn" onclick="startRecording()" disabled>
+    🎤 Read Aloud (tap to start)
+  </button>
+  <div id="record-timer">28</div>
+  <div id="spoken-interim"></div>
+</div>
+
+<!-- ── Step 3: Word Highlighting ── -->
+<div class="card" id="card-highlight" style="display:none">
+  <h2><span class="step-num">3</span> How You Did</h2>
+  <div id="legend" style="font-size:0.8rem; color:var(--muted); margin-bottom:6px;">
+    <span style="color:var(--correct); font-weight:700;">■ Correct</span> &nbsp;
+    <span style="color:var(--struggling); font-weight:700;">■ Struggling</span> &nbsp;
+    <span style="color:var(--missed); font-weight:700;">■ Missed</span>
+  </div>
+  <div id="highlighted-text"></div>
+  <div id="accuracy-badge"></div>
+  <button class="btn btn-success btn-full" id="coach-btn" onclick="getCoaching()">
+    <span id="coach-spinner" class="spinner" style="display:none"></span>
+    Get Coaching 💬
+  </button>
+</div>
+
+<!-- ── Step 4: Coaching ── -->
+<div class="card" id="card-coaching" style="display:none">
+  <h2><span class="step-num">4</span> LitBud Says</h2>
+  <div id="coaching-bubble"></div>
+  <div id="tool-calls-panel">
+    <div class="tool-call-label">🔧 Tool calls fired</div>
+  </div>
+  <button class="btn btn-secondary btn-full" id="new-session-btn" onclick="newSession()">
+    🔄 New Session
+  </button>
+</div>
+
+<footer>
+  Dev tool only. Camera &amp; Ollama work offline. Speech recognition requires Chrome + internet.<br>
+  Start Ollama: <code>OLLAMA_ORIGINS=http://localhost:8000 ollama serve</code>
+</footer>
+
+<!-- Scripts — load in order, no build tools -->
+<script src="fuzzy.js"></script>
+<script src="camera.js"></script>
+<script src="speech.js"></script>
+<script src="api.js"></script>
+
+<script>
+// ── App state ──
+let pageText = '';
+let spokenText = '';
+let matchResult = [];
+let recordTimerInterval = null;
+let recordSecondsLeft = 28;
+
+// ── Startup: check Ollama availability ──
+window.addEventListener('DOMContentLoaded', async () => {
+  const ok = await OllamaAPI.isAvailable();
+  const modelOk = ok && await OllamaAPI.isModelReady();
+  const banner = document.getElementById('status-banner');
+  if (!ok) {
+    banner.className = 'error';
+    banner.textContent = '⚠ Ollama not running. Start it: OLLAMA_ORIGINS=http://localhost:8000 ollama serve';
+  } else if (!modelOk) {
+    banner.className = 'warn';
+    banner.textContent = '⚠ litbud model not found. Run: ollama create litbud -f ollama/Modelfile';
+  } else {
+    banner.className = 'ok';
+    banner.textContent = '✓ Ollama running. litbud model ready.';
+    setTimeout(() => { banner.style.display = 'none'; }, 3000);
+  }
+
+  if (!Speech.isSupported()) {
+    showBanner('warn', '⚠ Web Speech API not supported. Use Chrome for voice recognition.');
+  }
+});
+
+// ── Step 1: Camera ──
+async function startCamera() {
+  const btn = document.getElementById('start-camera-btn');
+  btn.disabled = true;
+  btn.textContent = 'Starting camera...';
+  try {
+    await Camera.start(document.getElementById('camera-video'));
+    btn.textContent = '📷 Camera active';
+    document.getElementById('capture-btn').disabled = false;
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = '📷 Start Camera';
+    showBanner('error', 'Camera error: ' + err.message);
+  }
+}
+
+async function captureAndOCR() {
+  const captureBtn = document.getElementById('capture-btn');
+  const spinner = document.getElementById('capture-spinner');
+  captureBtn.disabled = true;
+  spinner.style.display = 'inline-block';
+
+  try {
+    const videoEl = document.getElementById('camera-video');
+    const previewEl = document.getElementById('captured-preview');
+    const b64 = Camera.captureAndPreview(videoEl, previewEl);
+    previewEl.style.display = 'block';
+    Camera.stop();
+
+    captureBtn.textContent = 'Extracting text...';
+    const extracted = await OllamaAPI.extractPageText(b64);
+
+    if (extracted === 'UNCLEAR_IMAGE' || !extracted) {
+      showBanner('warn', '⚠ Could not read the page. Try again with better lighting.');
+      captureBtn.disabled = false;
+      spinner.style.display = 'none';
+      captureBtn.textContent = 'Capture & Read Text';
+      return;
+    }
+
+    pageText = extracted;
+    document.getElementById('ocr-text-box').value = pageText;
+    document.getElementById('card-ocr').style.display = 'block';
+    document.getElementById('record-btn').disabled = false;
+    document.getElementById('card-ocr').scrollIntoView({ behavior: 'smooth' });
+
+    spinner.style.display = 'none';
+    captureBtn.textContent = 'Capture & Read Text';
+    captureBtn.disabled = false;
+  } catch (err) {
+    showBanner('error', 'OCR failed: ' + err.message);
+    spinner.style.display = 'none';
+    captureBtn.disabled = false;
+    captureBtn.textContent = 'Capture & Read Text';
+  }
+}
+
+// ── Step 2: Recording ──
+async function startRecording() {
+  const btn = document.getElementById('record-btn');
+  const timerEl = document.getElementById('record-timer');
+  const interimEl = document.getElementById('spoken-interim');
+
+  // Read the (possibly edited) OCR text before recording
+  pageText = document.getElementById('ocr-text-box').value.trim();
+  if (!pageText) {
+    showBanner('warn', 'Please capture a page first.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Listening... (tap again to stop early)';
+  btn.onclick = () => Speech.stop();
+  timerEl.style.display = 'block';
+  interimEl.style.display = 'block';
+  interimEl.textContent = '';
+
+  recordSecondsLeft = 28;
+  timerEl.textContent = recordSecondsLeft;
+  recordTimerInterval = setInterval(() => {
+    recordSecondsLeft--;
+    timerEl.textContent = recordSecondsLeft;
+    if (recordSecondsLeft <= 0) clearInterval(recordTimerInterval);
+  }, 1000);
+
+  try {
+    spokenText = await Speech.listen({
+      maxSeconds: 28,
+      onInterimResult: (t) => { interimEl.textContent = t; },
+      onEnd: () => {
+        clearInterval(recordTimerInterval);
+        timerEl.style.display = 'none';
+      },
+    });
+
+    interimEl.textContent = spokenText || '(nothing detected)';
+    showHighlighting();
+  } catch (err) {
+    showBanner('error', 'Speech recognition error: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🎤 Read Aloud (tap to start)';
+    btn.onclick = startRecording;
+    clearInterval(recordTimerInterval);
+    timerEl.style.display = 'none';
+  }
+}
+
+// ── Step 3: Highlighting ──
+function showHighlighting() {
+  const pageWords = pageText.split(/\s+/).filter(w => w.length > 0);
+  const spokenWords = spokenText.split(/\s+/).filter(w => w.length > 0);
+  matchResult = FuzzyMatcher.compare(pageWords, spokenWords);
+
+  const container = document.getElementById('highlighted-text');
+  container.innerHTML = matchResult.map(({ word, status }) => {
+    const cls = status === 'CORRECT' ? 'word-correct'
+              : status === 'STRUGGLING' ? 'word-struggling'
+              : 'word-missed';
+    return `<span class="${cls}">${escapeHtml(word)}</span>`;
+  }).join(' ');
+  container.style.display = 'block';
+
+  const acc = FuzzyMatcher.accuracy(matchResult);
+  const badge = document.getElementById('accuracy-badge');
+  const color = acc >= 85 ? 'var(--correct)' : acc >= 60 ? 'var(--struggling)' : 'var(--missed)';
+  badge.style.background = color;
+  badge.style.color = 'white';
+  badge.textContent = `Accuracy: ${acc}%`;
+  badge.style.display = 'inline-block';
+
+  document.getElementById('card-highlight').style.display = 'block';
+  document.getElementById('card-highlight').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Step 4: Coaching ──
+async function getCoaching() {
+  const btn = document.getElementById('coach-btn');
+  const spinner = document.getElementById('coach-spinner');
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+
+  try {
+    const struggled = FuzzyMatcher.struggledWords(matchResult);
+    const lang = detectLanguage(pageText);
+    const result = await OllamaAPI.getCoaching(pageText, spokenText, struggled, lang);
+
+    // Show coaching bubble
+    const bubble = document.getElementById('coaching-bubble');
+    bubble.textContent = result.coachingText;
+    bubble.style.display = 'block';
+
+    // Show tool calls
+    const panel = document.getElementById('tool-calls-panel');
+    if (result.toolCalls.length > 0) {
+      panel.style.display = 'block';
+      result.toolCalls.forEach(tc => {
+        const div = document.createElement('div');
+        div.className = 'tool-call';
+        div.textContent = JSON.stringify(tc, null, 2);
+        panel.appendChild(div);
+      });
+    }
+
+    document.getElementById('card-coaching').style.display = 'block';
+    document.getElementById('card-coaching').scrollIntoView({ behavior: 'smooth' });
+  } catch (err) {
+    showBanner('error', 'Coaching failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+// ── Helpers ──
+function newSession() {
+  pageText = '';
+  spokenText = '';
+  matchResult = [];
+
+  document.getElementById('captured-preview').style.display = 'none';
+  document.getElementById('ocr-text-box').value = '';
+  document.getElementById('highlighted-text').style.display = 'none';
+  document.getElementById('accuracy-badge').style.display = 'none';
+  document.getElementById('coaching-bubble').style.display = 'none';
+  document.getElementById('spoken-interim').style.display = 'none';
+  document.getElementById('card-ocr').style.display = 'none';
+  document.getElementById('card-highlight').style.display = 'none';
+  document.getElementById('card-coaching').style.display = 'none';
+
+  // Clear tool calls (keep the label)
+  const panel = document.getElementById('tool-calls-panel');
+  panel.style.display = 'none';
+  const calls = panel.querySelectorAll('.tool-call');
+  calls.forEach(el => el.remove());
+
+  document.getElementById('record-btn').disabled = true;
+  document.getElementById('capture-btn').disabled = false;
+  document.getElementById('start-camera-btn').disabled = false;
+  document.getElementById('start-camera-btn').textContent = '📷 Start Camera';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  startCamera();
+}
+
+function detectLanguage(text) {
+  // Devanagari block: U+0900–U+097F
+  if (/[\u0900-\u097F]/.test(text)) return 'hi';
+  // Tamil block: U+0B80–U+0BFF
+  if (/[\u0B80-\u0BFF]/.test(text)) return 'ta';
+  return 'en';
+}
+
+function showBanner(type, msg) {
+  const banner = document.getElementById('status-banner');
+  banner.className = type;
+  banner.textContent = msg;
+  if (type === 'ok') setTimeout(() => { banner.style.display = 'none'; }, 3000);
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+</script>
+
+</body>
+</html>
