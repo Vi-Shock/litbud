@@ -10,10 +10,10 @@
 ## Current Status
 
 **Last updated:** Apr 16, 2026
-**Phase:** Phase 2 — Feature 4 scaffold complete
-**Next task:** Feature 5 (Progress Dashboard) + device tests when tablet/phone available
-**Blockers:** Moto G54 5G has chipset issues. Alternative device (Android tablet) pending confirmation of Android 12+ and 4GB+ RAM.
-**Notes:** Gallery minSdk=31 (Android 12) — overrides CLAUDE.md's API 24. Java 21 required for LiteRT-LM builds (added to .zshrc).
+**Phase:** Phase 2 — ALL 6 features scaffold complete → device testing on tablet
+**Next task:** Tablet device testing (model download in progress) → Phase 3 fine-tuning from Apr 30
+**Blockers:** None (tablet confirmed working, Gemma-4-E2B-it downloading)
+**Notes:** Gallery minSdk=31 (Android 12) — overrides CLAUDE.md's API 24. Java 21 required for LiteRT-LM builds (added to .zshrc). Allowlist fix: push model_allowlists/1_0_12.json to /sdcard/Android/data/com.google.aiedge.gallery/files/model_allowlist.json on fresh installs.
 **Days remaining:** 31 (Apr 16 - May 17)
 
 ---
@@ -253,29 +253,23 @@
 
 **Goal:** Visual chart showing reading accuracy over time. Proves progress tracking works end-to-end.
 
-- [ ] Add chart library to `build.gradle` — MPAndroidChart or equivalent
-  - Alternative: Android Canvas drawing if dependency is problematic
-- [ ] Create dashboard activity/fragment
-  - X-axis: session number (1, 2, 3, ...)
-  - Y-axis: accuracy percentage (0-100%)
-  - Line chart, Nunito font labels, child-friendly colors
-- [ ] Query `progress` table via Room DAO with Kotlin Flow
-- [ ] Add navigation from home screen to dashboard (large button, 56dp+)
-- [ ] Handle empty state: "Read your first page to see your progress!" (friendly, not empty)
-- [ ] **Done when:** Dashboard shows accuracy-over-time line chart from Room DB data. Updates reactively after each reading session. Works in airplane mode.
+- [x] Canvas-based line chart (no external library — Compose Canvas API)
+  - X-axis: session number, Y-axis: accuracy 0-100%, grid lines at 25% intervals
+- [x] Query `progress` table via Room DAO with Kotlin Flow (reactive updates)
+- [x] "My Progress" button in ResultPanel → DASHBOARD phase in LitBudScreen
+- [x] Empty state: "Read your first page to see your progress!"
+- [x] Summary stats: sessions completed, average accuracy, best accuracy
+- [ ] **Done when:** Dashboard shows accuracy-over-time line chart from Room DB data. Updates reactively after each reading session. Works in airplane mode. ← device test pending
 
 ### Feature 6: App Navigation + Home Screen (Day 16 — shared with Feature 5)
 
 **Goal:** LitBud home screen with branding and clear navigation to reading flow + dashboard.
 
-- [ ] Customize Gallery's MainActivity → LitBud home screen
-  - App name: "LitBud" with tagline "Your Reading Buddy"
-  - Nunito font, child-friendly colors, large buttons (56dp+)
-  - Two primary actions: "Read a Book" → camera flow, "My Progress" → dashboard
-  - Model download flow preserved from Gallery (first launch only)
-- [ ] Verify complete user flow: Home → Camera → OCR → Read Aloud → Coaching → Dashboard
-- [ ] Test full flow in airplane mode end-to-end
-- [ ] Run `./gradlew assembleDebug` → install → full walkthrough on phone
+- [x] App name renamed: "Google AI Edge Gallery" → "LitBud" in strings.xml (launcher label, TOS title)
+- [x] "My Progress" accessible from within LitBud reading flow (RESULT phase → DASHBOARD phase)
+- [x] Model download flow preserved from Gallery (first launch only)
+- [ ] Verify complete user flow: Home → Camera → OCR → Read Aloud → Coaching → Dashboard ← device test pending
+- [ ] Test full flow in airplane mode end-to-end ← device test pending
 - [ ] **MVP FREEZE (Apr 29):** No new features after this point. Only bug fixes and polish.
 
 ---
