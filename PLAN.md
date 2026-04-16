@@ -10,8 +10,8 @@
 ## Current Status
 
 **Last updated:** Apr 16, 2026
-**Phase:** Phase 2 starts tomorrow (Apr 17)
-**Next task:** Day 5 — Feature 1: Page Capture & OCR in Android
+**Phase:** Phase 2 — Feature 1 scaffold complete
+**Next task:** Feature 1 completion — phone test when phone available + then Feature 2 (FuzzyMatcher + audio)
 **Blockers:** Moto G54 5G has chipset issues. Alternative Android phone pending. APK install/phone test blocked until phone resolved.
 **Notes:** Gallery minSdk=31 (Android 12) — overrides CLAUDE.md's API 24. Java 21 required for LiteRT-LM builds (added to .zshrc).
 **Days remaining:** 31 (Apr 16 - May 17)
@@ -173,16 +173,19 @@
 
 **Goal:** Child points camera at book page → Gemma 4 vision extracts text → clean text displayed on screen.
 
-- [ ] Modify Gallery's Ask Image activity to use LitBud's OCR prompt
-  - File: identify the activity that handles image+prompt → model response
+- [x] Modify Gallery's Ask Image activity to use LitBud's OCR prompt
+  - Created `customtasks/litbud/` package as single CustomTask (not patching built-in Ask Image)
   - Prompt: "Extract all text from this book page. Return only the text, preserving paragraph breaks."
-- [ ] Customize camera UI: child-friendly colors, large capture button (56dp+), Nunito font
-  - Files: XML layout for the camera screen, styles.xml, colors.xml
-- [ ] Add Nunito font to `android/app/src/main/res/font/`
-- [ ] Display extracted text in a readable format (20sp+ font, padded, scrollable)
-- [ ] Test with 5 sample pages from `demo/sample_pages/`
-- [ ] Handle edge cases: blurry photo → friendly retry message ("Let's try again! Hold the phone steady.")
-- [ ] **Done when:** Camera captures page → OCR extracts text → text displays cleanly on screen. Works in airplane mode.
+- [x] Customize camera UI: child-friendly colors, large capture button (64dp), Nunito font (already in theme)
+  - LitBudScreen.kt: 4-phase UI, LitBudGreen (#1B8A6B) brand color
+- [x] Add Nunito font — already present in Gallery theme, no action needed
+- [x] Display extracted text in a readable format (20sp font, padded, scrollable) — ResultPanel
+- [x] Handle edge cases: blurry/empty OCR result → friendly retry message in ErrorPanel
+- [x] Add Gemma-4-E2B-it to model_allowlist.json (vision + audio + thinking support)
+- [x] Copy tutor_system.txt → `assets/prompts/tutor_system.txt`
+- [x] Build: SUCCESS (131MB APK)
+- [ ] Test with 5 sample pages from `demo/sample_pages/` ← pending phone
+- [ ] **Done when:** Camera captures page → OCR extracts text → text displays cleanly on screen. Works in airplane mode. ← phone test pending
 
 ### Feature 2: Listen & Follow + Gap Detection (Days 8-10)
 
