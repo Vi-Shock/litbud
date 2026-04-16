@@ -43,11 +43,21 @@ Each component has a detailed skill. Always invoke before working in that direct
 ## Build Commands
 
 ### Android
+
+**Environment — must export before every build session (not inherited from shell):**
 ```bash
-./gradlew assembleDebug                                          # Build APK
-adb install app/build/outputs/apk/debug/app-debug.apk           # Install to device
-adb logcat -s LitBud:V                                           # Filter logs
-./gradlew test --tests "*.FuzzyMatcherTest"                      # Fuzzy matching unit tests
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21
+export ANDROID_HOME="/opt/homebrew/share/android-commandlinetools"
+export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH"
+```
+
+```bash
+cd android/Android/src
+./gradlew assembleDebug                                                    # Build APK
+adb install -r app/build/outputs/apk/debug/app-debug.apk                  # Install (use -r to replace)
+adb logcat -d -s AndroidRuntime:E LitBud:V                                 # Dump crash logs
+adb logcat -s LitBud:V                                                     # Live filtered logs
+./gradlew test --tests "*.FuzzyMatcherTest"                                # Fuzzy matching unit tests
 ```
 Always test in airplane mode before marking any feature done.
 
@@ -89,6 +99,25 @@ python fine-tuning/prepare_dataset.py                            # Generate trai
 `track_progress` · `get_hint` · `adjust_difficulty` · `log_session`
 
 Tool calls arrive as JSON in model response text on Android. Parse with `org.json.JSONObject`. `track_progress` and `log_session` write to Room DB. `adjust_difficulty` persists to SharedPreferences. `get_hint` returns to UI only.
+
+---
+
+## Android Audio Rules (Hard-Won)
+
+- `AudioRecord` produces **raw PCM-16 mono at 16 kHz** — never pass this directly to LiteRT-LM.
+- LiteRT-LM's internal miniaudio decoder requires a valid **WAV file** (44-byte RIFF header + PCM data). Passing raw PCM throws `LiteRtLmJniException: Failed to initialize miniaudio decoder, error code: -10` (`MA_INVALID_FILE`) and crashes the app.
+- Always wrap PCM → WAV before `runInference(audioClips = ...)`. Use `pcmToWav()` in `LitBudViewModel` (mirrors Gallery's `genByteArrayForWav()` in `ChatMessage.kt`).
+- The Gallery's own code always calls `genByteArrayForWav()` — check how Gallery handles something before reimplementing it independently.
+- `AudioRecord` lifecycle race condition: the UI stop-button and the IO recording coroutine both touch the same `AudioRecord`. Always guard `recorder.stop()` / `recorder.release()` with a `recordingState` check + `try-catch(IllegalStateException)` — the UI may have already released the recorder before the coroutine loop exits.
+
+---
+
+## Bug Fix Log
+
+| Date | Bug | Root Cause | Fix |
+|------|-----|-----------|-----|
+| 2026-04-16 | App crash on Stop Recording | Race: UI thread released `AudioRecord` while IO coroutine still looped; coroutine called `stop()` on released instance → `IllegalStateException` | Guard `stop()/release()` in `recordAudio()` with state check + try-catch — `LitBudScreen.kt` |
+| 2026-04-16 | App crash after stop — `miniaudio error -10` | Raw PCM bytes passed to `runInference(audioClips)` without WAV header; LiteRT-LM miniaudio decoder requires valid WAV file | Added `pcmToWav()` helper in `LitBudViewModel.kt`; wraps PCM in 44-byte RIFF/WAV header before inference |
 
 ---
 
