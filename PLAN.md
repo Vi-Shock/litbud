@@ -10,9 +10,10 @@
 ## Current Status
 
 **Last updated:** Apr 16, 2026
-**Phase:** Phase 1 — Day 3 (Gallery fork day)
-**Next task:** Day 3 — Fork AI Edge Gallery + first build
-**Blockers:** Moto G54 5G has chipset issues (MediaTek Dimensity 7020 likely incompatible). Testing with alternative Android phone pending. USB debugging + adb connection pending phone resolution.
+**Phase:** Phase 1 — Day 4 tomorrow (Gallery orientation + PWA scaffold)
+**Next task:** Day 4 — Gallery codebase orientation + PWA scaffold
+**Blockers:** Moto G54 5G has chipset issues. Alternative Android phone pending. APK install/phone test blocked until phone resolved.
+**Notes:** Gallery minSdk=31 (Android 12) — overrides CLAUDE.md's API 24. Java 21 required for LiteRT-LM builds (added to .zshrc).
 **Days remaining:** 31 (Apr 16 - May 17)
 
 ---
@@ -134,15 +135,17 @@
 
 ### Day 3 (Apr 16) — Fork AI Edge Gallery + first build
 
-- [ ] Fork `google-ai-edge/gallery` on GitHub
-- [ ] Clone fork into `android/` directory
-- [ ] Read Gallery's README and build instructions
-- [ ] Attempt first build: `cd android && ./gradlew assembleDebug`
-- [ ] If build fails: check Gallery's GitHub issues for the error, debug
-- [ ] Install debug APK on phone: `adb install app/build/outputs/apk/debug/app-debug.apk`
-- [ ] Verify forked app launches and works identically to Play Store version
-- [ ] Test all 4 modalities in the forked app (vision, audio, thinking, tools)
-- [ ] **GATE:** Forked app builds from source and runs on Moto G54 5G
+- [x] Fork `google-ai-edge/gallery` on GitHub → https://github.com/Vi-Shock/gallery
+- [x] Clone fork into `android/` directory
+- [x] Read Gallery's README and build instructions
+- [x] Attempt first build: `cd android/Android/src && ./gradlew assembleDebug`
+  - Fixed: Java 21 required (LiteRT-LM JAR is class file v65.0). Installed via `brew install openjdk@21`. Added JAVA_HOME to .zshrc.
+  - Note: Gallery minSdk=31, not 24. Build directory is `android/Android/src/`, not `android/`.
+  - APK produced: `app/build/outputs/apk/debug/app-debug.apk` (131MB — under 150MB budget)
+- [ ] Install debug APK on phone: `adb install android/Android/src/app/build/outputs/apk/debug/app-debug.apk` ← BLOCKED (no phone yet)
+- [ ] Verify forked app launches and works identically to Play Store version ← BLOCKED
+- [ ] Test all 4 modalities in the forked app (vision, audio, thinking, tools) ← BLOCKED
+- [ ] **GATE:** Forked app builds from source ✅ | runs on phone ← pending phone
 - [ ] **FALLBACK TRIGGER:** If build fails by end of Day 4 → switch to LiteRT-LM SDK from scratch
 
 ### Day 4 (Apr 17) — Gallery codebase orientation + PWA scaffold
