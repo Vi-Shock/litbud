@@ -1,0 +1,83 @@
+# LitBud Ollama Test Cases
+# Run these manually via: ollama run litbud
+# Or send via /api/generate with stream:false
+# All 5 must pass before updating android/assets/prompts/tutor_system.txt
+
+---
+
+## TEST 1: Perfect reading
+Expected: Enthusiastic celebration. Calls track_progress(100.0, ..., []) and log_session. No get_hint.
+
+Prompt:
+PAGE TEXT: The cat sat on the mat. The dog ran fast.
+
+CHILD SAID: The cat sat on the mat. The dog ran fast.
+
+STRUGGLED WORDS: none
+
+Coach the child.
+
+---
+
+## TEST 2: One word error (phonics hint required)
+Expected: Positive tone. One specific phonics hint for "elephant" (the 'ph' → 'f' sound). Calls get_hint + track_progress + log_session.
+
+Prompt:
+PAGE TEXT: The enormous elephant splashed in the river.
+
+CHILD SAID: The enormous elefant splashed in the river.
+
+STRUGGLED WORDS: elephant (STRUGGLING, score 72)
+
+Coach the child.
+
+---
+
+## TEST 3: Multiple errors (focus on worst 1-2, stay encouraging)
+Expected: Still warm tone. Focuses hint on worst word only (ancient, score 45). Does NOT give hints for all three words. Calls track_progress with all 3 in struggled_words.
+
+Prompt:
+PAGE TEXT: The mysterious traveller climbed over the ancient stone bridge.
+
+CHILD SAID: The mistery travler climbed over the old stone bridge.
+
+STRUGGLED WORDS: mysterious (STRUGGLING, score 61), traveller (STRUGGLING, score 70), ancient (MISSED, score 45)
+
+Coach the child.
+
+---
+
+## TEST 4: Hindi text (respond entirely in Hindi)
+Expected: Full Hindi response. No English words in coaching text. Calls track_progress(100.0, ..., []) and log_session. Tool JSON arguments can be in English (field names/values), but the coaching message must be Hindi.
+
+Prompt:
+PAGE TEXT (Hindi): एक छोटी लड़की जंगल में गई। उसने एक सुंदर फूल देखा।
+
+CHILD SAID: एक छोटी लड़की जंगल में गई। उसने एक सुंदर फूल देखा।
+
+STRUGGLED WORDS: none
+
+Coach the child.
+
+---
+
+## TEST 5: Function calling fires (verify JSON structure)
+Expected: tool_calls JSON block in response. Must include track_progress and log_session. Must include get_hint because there's an error. JSON must be parseable.
+
+Prompt:
+PAGE TEXT: She quickly ran across the fragmented path through the ancient forest.
+
+CHILD SAID: She quickly ran across the fragmint path through the ancient forest.
+
+STRUGGLED WORDS: fragmented (STRUGGLING, score 68)
+
+Coach the child.
+
+---
+
+## Pass Criteria
+- TEST 1: response contains celebration language. tool_calls includes track_progress with accuracy_percent=100.0 and struggled_words=[]. No get_hint.
+- TEST 2: response contains phonics hint for "elephant". tool_calls includes get_hint with word="elephant".
+- TEST 3: response gives hint for ONE word only (the worst). tool_calls includes all 3 in struggled_words.
+- TEST 4: coaching text is entirely in Hindi (Devanagari). tool_calls are present.
+- TEST 5: response contains valid JSON with tool_calls array. All three tools fire: track_progress, log_session, get_hint.
