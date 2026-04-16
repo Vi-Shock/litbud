@@ -10,9 +10,9 @@
 ## Current Status
 
 **Last updated:** Apr 16, 2026
-**Phase:** Phase 2 — Feature 2 scaffold complete
-**Next task:** Feature 2 phone test when phone available + Feature 3 (Coaching Response UI)
-**Blockers:** Moto G54 5G has chipset issues. Alternative Android phone pending. APK install/phone test blocked until phone resolved.
+**Phase:** Phase 2 — Feature 3 scaffold complete
+**Next task:** Feature 4 (Function Calling + Room DB) + device tests when tablet/phone available
+**Blockers:** Moto G54 5G has chipset issues. Alternative device (Android tablet) pending confirmation of Android 12+ and 4GB+ RAM.
 **Notes:** Gallery minSdk=31 (Android 12) — overrides CLAUDE.md's API 24. Java 21 required for LiteRT-LM builds (added to .zshrc).
 **Days remaining:** 31 (Apr 16 - May 17)
 
@@ -216,18 +216,17 @@
 
 **Goal:** Model generates warm, age-appropriate coaching with phonics hints for struggled words.
 
-- [ ] Modify Gallery's AI Chat activity to display coaching in a speech bubble (24dp radius, rounded)
-  - XML layout: rounded background drawable, 20sp+ text, Nunito font, padding
-- [ ] Integrate system prompt from `ollama/prompts/tutor_system.txt` into the Android app
-  - Copy to `android/app/src/main/assets/prompts/tutor_system.txt`
-  - Load at runtime as the system message for the coaching call
-- [ ] Build the coaching prompt: system prompt + page text + struggled words list + "Coach the child"
-- [ ] Ensure thinking mode is enabled (via system prompt instruction, not API flag)
-- [ ] Parse model response — extract coaching text, separate from any tool call JSON
-- [ ] Display coaching response in the speech bubble UI
-- [ ] Handle model errors gracefully — never show raw errors to the child
-- [ ] Test with all 5 test cases from `ollama/prompts/test_cases.txt`
-- [ ] **Done when:** After reading, child sees a warm coaching response in a speech bubble. Phonics hints are specific. Thinking trace is used internally. Works in airplane mode.
+- [x] Modify Gallery's AI Chat activity to display coaching in a speech bubble (24dp radius, rounded)
+  - Compose Surface with RoundedCornerShape(24.dp), 20sp text — in ResultPanel
+- [x] Integrate system prompt from `ollama/prompts/tutor_system.txt` into the Android app
+  - Loaded from assets at model init (LitBudTask.kt) AND re-passed on each coaching resetConversation (LitBudViewModel)
+- [x] Build the coaching prompt: page text + struggled words list sent after system prompt
+- [x] Ensure thinking mode is enabled (via system prompt instruction, not API flag)
+- [x] Parse model response — `parseCoachingResponse()` strips `<think>` blocks and ```json tool_calls``` blocks
+- [x] Display coaching response in the speech bubble UI
+- [x] Handle model errors gracefully — never show raw errors to the child
+- [ ] Test with all 5 test cases from `ollama/prompts/test_cases.txt` ← pending device
+- [ ] **Done when:** After reading, child sees a warm coaching response in a speech bubble. Phonics hints are specific. Thinking trace is used internally. Works in airplane mode. ← device test pending
 
 ### Feature 4: Function Calling Tools (Days 13-14)
 
