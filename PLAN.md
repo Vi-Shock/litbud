@@ -10,8 +10,8 @@
 ## Current Status
 
 **Last updated:** Apr 16, 2026
-**Phase:** Phase 2 — Feature 3 scaffold complete
-**Next task:** Feature 4 (Function Calling + Room DB) + device tests when tablet/phone available
+**Phase:** Phase 2 — Feature 4 scaffold complete
+**Next task:** Feature 5 (Progress Dashboard) + device tests when tablet/phone available
 **Blockers:** Moto G54 5G has chipset issues. Alternative device (Android tablet) pending confirmation of Android 12+ and 4GB+ RAM.
 **Notes:** Gallery minSdk=31 (Android 12) — overrides CLAUDE.md's API 24. Java 21 required for LiteRT-LM builds (added to .zshrc).
 **Days remaining:** 31 (Apr 16 - May 17)
@@ -232,22 +232,22 @@
 
 **Goal:** Model calls tools to track progress, provide hints, adjust difficulty, and log sessions.
 
-- [ ] Implement `ToolCallHandler.kt` — parse tool call JSON from model response text
+- [x] Implement `ToolCallHandler.kt` — parse tool call JSON from model response text
   - Parse with `org.json.JSONObject`
   - Handle 4 tools: `track_progress`, `get_hint`, `adjust_difficulty`, `log_session`
   - If JSON parse fails: log error, show coaching text anyway, never crash
-- [ ] Implement Room database
+- [x] Implement Room database
   - File: `LitBudDatabase.kt` — singleton, database name `litbud.db`
   - Table `progress`: id, timestamp, accuracy_percent (float), words_per_minute (float), struggled_words (JSON string)
   - Table `sessions`: id, date (string), duration_seconds (int), overall_accuracy (float), new_vocabulary (JSON string)
   - DAOs with Kotlin Flow for reactive queries
-- [ ] Wire `track_progress` → insert into `progress` table
-- [ ] Wire `log_session` → insert into `sessions` table
-- [ ] Wire `get_hint` → return hint text to coaching display (no DB write)
-- [ ] Wire `adjust_difficulty` → persist to SharedPreferences (key: `current_difficulty_level`, int 1-5)
-- [ ] Include tool definitions in the system prompt / model call so model knows to call them
-- [ ] Test: complete a reading → verify `track_progress` row appears in DB
-- [ ] **Done when:** Model response includes tool calls → tools parsed and executed → data persists to Room DB / SharedPreferences. No crashes on malformed tool JSON.
+- [x] Wire `track_progress` → insert into `progress` table
+- [x] Wire `log_session` → insert into `sessions` table
+- [x] Wire `get_hint` → return hint text to coaching display (no DB write)
+- [x] Wire `adjust_difficulty` → persist to SharedPreferences (key: `current_difficulty_level`, int 1-5)
+- [x] Include tool definitions in the system prompt / model call so model knows to call them (tutor_system.txt already has full tool spec)
+- [ ] Test: complete a reading → verify `track_progress` row appears in DB ← pending device
+- [ ] **Done when:** Model response includes tool calls → tools parsed and executed → data persists to Room DB / SharedPreferences. No crashes on malformed tool JSON. ← device test pending
 
 ### Feature 5: Progress Dashboard (Days 15-16)
 
